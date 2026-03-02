@@ -4,10 +4,10 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using Shared.Infrastructure.Persistence.Abstractions;
-using Webhook.Application.Interfaces;
-using Webhook.Domain.Models;
+using AccountBalance.Webhook.Application.Interfaces;
+using Shared.Domain.Entities;
 
-namespace Webhook.Infrastructure.Persistence;
+namespace AccountBalance.Webhook.Infrastructure.Persistence;
 
 public class IngestionRepository : IIngestionRepository
 {

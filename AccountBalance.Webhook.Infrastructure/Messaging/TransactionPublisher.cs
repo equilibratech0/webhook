@@ -3,10 +3,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Shared.Infrastructure.Messaging.Abstractions;
-using Webhook.Application.Interfaces;
-using Webhook.Domain.Events;
+using AccountBalance.Webhook.Application.Interfaces;
+using Shared.Domain.Events;
 
-namespace Webhook.Infrastructure.Messaging;
+namespace AccountBalance.Webhook.Infrastructure.Messaging;
 
 public class TransactionPublisher : ITransactionPublisher
 {
@@ -19,9 +19,9 @@ public class TransactionPublisher : ITransactionPublisher
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task PublishAsync(TransactionIngestionCreatedEvent domainEvent, CancellationToken cancellationToken = default)
+    public async Task PublishAsync(TransactionReceivedEvent domainEvent, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Publishing TransactionIngestionCreatedEvent for IdempotencyKey: {IdempotencyKey}", domainEvent.IdempotencyKey);
+        _logger.LogDebug("Publishing TransactionReceivedEvent for IdempotencyKey: {IdempotencyKey}", domainEvent.IdempotencyKey);
 
         await _messagePublisher.PublishIntegrationEventAsync(domainEvent, cancellationToken);
     }

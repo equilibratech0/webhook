@@ -2,7 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Shared.Domain.Enums;
 
-namespace Webhook.Application.Interfaces;
+namespace AccountBalance.Webhook.Application.Interfaces;
 
 public interface ITransactionIngestionService
 {

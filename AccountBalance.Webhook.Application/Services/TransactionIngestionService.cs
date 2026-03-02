@@ -3,11 +3,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Shared.Domain.Enums;
-using Webhook.Application.Interfaces;
-using Webhook.Domain.Events;
-using Webhook.Domain.Models;
+using AccountBalance.Webhook.Application.Interfaces;
+using Shared.Domain.Events;
+using Shared.Domain.Entities;
 
-namespace Webhook.Application.Services;
+namespace AccountBalance.Webhook.Application.Services;
 
 public class TransactionIngestionService : ITransactionIngestionService
 {
@@ -48,14 +48,14 @@ public class TransactionIngestionService : ITransactionIngestionService
             }
 
             // 2. Create Domain Model
-            var model = new TransactionIngestionModel(idempotencyKey, eventType, rawPayload);
+            var model = new TransactionIngestionModel(idempotencyKey, eventType);
 
             // 3. Create and Publish Event (Service Bus via Infrastructure)
-            var domainEvent = new TransactionIngestionCreatedEvent(
+            var domainEvent = new TransactionReceivedEvent(
                 model.Id,
                 model.IdempotencyKey,
                 model.EventType,
-                model.RawPayload);
+                rawPayload);
 
             await _publisher.PublishAsync(domainEvent, cancellationToken);
 
