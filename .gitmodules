@@ -1,0 +1,3 @@
+[submodule "AccountBalance.Shared"]
+	path = AccountBalance.Shared
+	url = ../AccountBalance.Shared
