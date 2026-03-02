@@ -20,9 +20,20 @@ public class WebhookAuthorizeAttribute : Attribute, IAuthorizationFilter
         }
 
         var configuration = context.HttpContext.RequestServices.GetRequiredService<IConfiguration>();
-        var configuredApiKey = configuration.GetValue<string>("WebhookAuth:ClientKey");
+        var clientsSection = configuration.GetSection("WebhookAuth:Clients");
 
-        if (string.IsNullOrEmpty(configuredApiKey) || !configuredApiKey.Equals(extractedApiKey))
+        bool isValid = false;
+
+        foreach (var client in clientsSection.GetChildren())
+        {
+            if (client.Value == extractedApiKey)
+            {
+                isValid = true;
+                break;
+            }
+        }
+
+        if (!isValid)
         {
             context.Result = new UnauthorizedObjectResult(new { Message = "Invalid client key." });
         }
