@@ -3,11 +3,11 @@ using Shared.Domain.Enums;
 
 namespace AccountBalance.Webhook.API.DTOs;
 
-public class TransactionRequestDto
+public class MoneyDto
 {
     [Required]
-    public MovementEventType EventType { get; set; }
+    public decimal Amount { get; set; }
 
     [Required]
-    public MovementPayloadDto Payload { get; set; } = null!;
+    public Currency Currency { get; set; }
 }

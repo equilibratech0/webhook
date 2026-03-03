@@ -27,6 +27,7 @@ public class TransactionsController : ControllerBase
 
     [HttpPost]
     public async Task<IActionResult> IngestTransaction(
+        [FromHeader(Name = "X-Client-Id")] Guid clientId,
         [FromHeader(Name = "Idempotency-Key")] string idempotencyKey,
         [FromBody] TransactionRequestDto request,
         CancellationToken cancellationToken)
@@ -38,10 +39,10 @@ public class TransactionsController : ControllerBase
 
         string rawPayload = JsonSerializer.Serialize(request.Payload, new JsonSerializerOptions { WriteIndented = false });
 
-        _logger.LogInformation("Received webhook request for EventType: {EventType}, IdempotencyKey: {IdempotencyKey}",
-            request.EventType, idempotencyKey);
+        _logger.LogInformation("Received webhook request for ClientId: {ClientId}, EventType: {EventType}, IdempotencyKey: {IdempotencyKey}",
+            clientId, request.EventType, idempotencyKey);
 
-        var result = await _ingestionService.IngestAsync(idempotencyKey, request.EventType, rawPayload, cancellationToken);
+        var result = await _ingestionService.IngestAsync(clientId, idempotencyKey, request.EventType, rawPayload, cancellationToken);
 
         if (result.IsSuccess)
         {
