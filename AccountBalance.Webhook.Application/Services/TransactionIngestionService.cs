@@ -45,7 +45,7 @@ public class TransactionIngestionService : ITransactionIngestionService
             if (exists)
             {
                 _logger.LogWarning("Duplicate transaction detected for IdempotencyKey: {IdempotencyKey}", idempotencyKey);
-                return IngestionResult.Failure("Duplicate transaction detected.");
+                return IngestionResult.Duplicate();
             }
 
             // 2. Create Domain Model
