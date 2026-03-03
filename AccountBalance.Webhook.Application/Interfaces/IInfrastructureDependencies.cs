@@ -8,6 +8,7 @@ namespace AccountBalance.Webhook.Application.Interfaces;
 public interface IIngestionRepository
 {
     Task<bool> ExistsAsync(string idempotencyKey, CancellationToken cancellationToken = default);
+    Task SaveAsync(TransactionIngestionModel model, CancellationToken cancellationToken = default);
 }
 
 public interface ITransactionPublisher

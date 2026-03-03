@@ -48,8 +48,9 @@ public class TransactionIngestionService : ITransactionIngestionService
                 return IngestionResult.Duplicate();
             }
 
-            // 2. Create Domain Model
+            // 2. Create Domain Model and Save to DB
             var model = new TransactionIngestionModel(clientId, idempotencyKey, eventType);
+            await _repository.SaveAsync(model, cancellationToken);
 
             // 3. Create and Publish Event (Service Bus via Infrastructure)
             var domainEvent = new TransactionReceivedEvent(

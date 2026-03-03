@@ -30,4 +30,10 @@ public class IngestionRepository : IIngestionRepository
         var count = await _collection.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
         return count > 0;
     }
+
+    public async Task SaveAsync(TransactionIngestionModel model, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Saving TransactionIngestionModel for IdempotencyKey: {IdempotencyKey}", model.IdempotencyKey);
+        await _collection.InsertOneAsync(model, cancellationToken: cancellationToken);
+    }
 }
