@@ -24,11 +24,15 @@ public class WebhookAuthorizeAttribute : Attribute, IAuthorizationFilter
 
         bool isValid = false;
 
+        string? clientIdStr = null;
+
         foreach (var client in clientsSection.GetChildren())
         {
-            if (client.Value == extractedApiKey)
+            var apiKey = client.GetSection("ApiKey").Value;
+            if (apiKey == extractedApiKey)
             {
                 isValid = true;
+                clientIdStr = client.GetSection("ClientId").Value;
                 break;
             }
         }
@@ -36,6 +40,16 @@ public class WebhookAuthorizeAttribute : Attribute, IAuthorizationFilter
         if (!isValid)
         {
             context.Result = new UnauthorizedObjectResult(new { Message = "Invalid client key." });
+            return;
+        }
+
+        if (Guid.TryParse(clientIdStr, out var clientId))
+        {
+            context.HttpContext.Items["ClientId"] = clientId;
+        }
+        else
+        {
+            context.Result = new UnauthorizedObjectResult(new { Message = "Client ID configuration is missing or invalid." });
         }
     }
 }

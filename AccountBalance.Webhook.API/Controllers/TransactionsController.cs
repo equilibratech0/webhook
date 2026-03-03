@@ -27,7 +27,6 @@ public class TransactionsController : ControllerBase
 
     [HttpPost]
     public async Task<IActionResult> IngestTransaction(
-        [FromHeader(Name = "X-Client-Id")] Guid clientId,
         [FromHeader(Name = "Idempotency-Key")] string idempotencyKey,
         [FromBody] TransactionRequestDto request,
         CancellationToken cancellationToken)
@@ -35,6 +34,12 @@ public class TransactionsController : ControllerBase
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
             return BadRequest(new TransactionResponseDto { Success = false, Message = "Idempotency-Key header is required." });
+        }
+
+        if (!HttpContext.Items.TryGetValue("ClientId", out var clientIdObj) || clientIdObj is not Guid clientId)
+        {
+            _logger.LogError("ClientId not found in HttpContext. Items: {@Items}", HttpContext.Items.Keys);
+            return StatusCode(500, new TransactionResponseDto { Success = false, Message = "Internal server error: Client context is missing." });
         }
 
         string rawPayload = JsonSerializer.Serialize(request.Payload, new JsonSerializerOptions { WriteIndented = false });
