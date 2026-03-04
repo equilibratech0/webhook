@@ -42,7 +42,7 @@ public class TransactionsController : ControllerBase
             return StatusCode(500, new TransactionResponseDto { Success = false, Message = "Internal server error: Client context is missing." });
         }
 
-        string rawPayload = JsonSerializer.Serialize(request.Payload, new JsonSerializerOptions { WriteIndented = false });
+        string rawPayload = JsonSerializer.Serialize(request.Movement, new JsonSerializerOptions { WriteIndented = false });
 
         _logger.LogInformation("Received webhook request for ClientId: {ClientId}, EventType: {EventType}, IdempotencyKey: {IdempotencyKey}",
             clientId, request.EventType, idempotencyKey);

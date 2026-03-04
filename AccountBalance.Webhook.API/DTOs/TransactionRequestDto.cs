@@ -9,5 +9,5 @@ public class TransactionRequestDto
     public MovementEventType EventType { get; set; }
 
     [Required]
-    public MovementPayloadDto Payload { get; set; } = null!;
+    public MovementPayloadDto Movement { get; set; } = null!;
 }

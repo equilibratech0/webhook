@@ -5,19 +5,18 @@ namespace AccountBalance.Webhook.API.DTOs;
 public class MovementPayloadDto
 {
     [Required]
-    public MoneyDto Amount { get; set; } = null!;
+    public AmountDto Amount { get; set; } = null!;
 
     [Required]
-    public string ReferenceId { get; set; } = null!;
+    public string TransactionId { get; set; } = null!;
 
-    [Required]
-    public string AccountId { get; set; } = null!;
+    public string? AccountId { get; set; }
 
-    [Required]
-    public string Country { get; set; } = null!;
+    public string? Country { get; set; }
 
-    [Required]
-    public PaymentMethodDto PaymentMethod { get; set; } = null!;
+    public PaymentMethodDto? PaymentMethod { get; set; }
+
+    public MerchantDto? Merchant { get; set; }
 
     public string? Description { get; set; }
 }

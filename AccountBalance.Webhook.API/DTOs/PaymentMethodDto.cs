@@ -1,16 +1,12 @@
-using System.ComponentModel.DataAnnotations;
 using Shared.Domain.Enums;
 
 namespace AccountBalance.Webhook.API.DTOs;
 
 public class PaymentMethodDto
 {
-    [Required]
-    public string PaymentMethodId { get; set; } = null!;
+    public string? PaymentMethodId { get; set; }
 
-    [Required]
-    public string PaymentMethodName { get; set; } = null!;
+    public string? ProviderName { get; set; }
 
-    [Required]
-    public PaymentMethodType Type { get; set; }
+    public PaymentMethodType? Type { get; set; }
 }
