@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
+using Shared.Domain.Entities;
 using Shared.Domain.Enums;
 using Shared.Domain.Events;
 using AccountBalance.Webhook.Application.Interfaces;
@@ -17,6 +18,9 @@ public class TransactionIngestionServiceTests
     private readonly Mock<ITransactionPublisher> _mockPublisher;
     private readonly Mock<ILogger<TransactionIngestionService>> _mockLogger;
     private readonly TransactionIngestionService _sut;
+
+    private static ClientContext CreateTestContext(Guid? clientId = null) =>
+        new(clientId ?? Guid.NewGuid(), "TestClient", new[] { "user1", "user2" });
 
     public TransactionIngestionServiceTests()
     {
@@ -37,7 +41,7 @@ public class TransactionIngestionServiceTests
     public async Task IngestAsync_WhenIdempotencyKeyIsEmpty_ReturnsFailure()
     {
         // Act
-        var result = await _sut.IngestAsync(Guid.NewGuid(), "TestClient", string.Empty, MovementEventType.TransactionCreated, "{}");
+        var result = await _sut.IngestAsync(CreateTestContext(), string.Empty, MovementEventType.TransactionCreated, "{}");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -54,7 +58,7 @@ public class TransactionIngestionServiceTests
             .ReturnsAsync(true);
 
         // Act
-        var result = await _sut.IngestAsync(Guid.NewGuid(), "TestClient", key, MovementEventType.TransactionCreated, "{}");
+        var result = await _sut.IngestAsync(CreateTestContext(), key, MovementEventType.TransactionCreated, "{}");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -68,13 +72,14 @@ public class TransactionIngestionServiceTests
         // Arrange
         var key = "new-key";
         var clientId = Guid.NewGuid();
+        var clientContext = CreateTestContext(clientId);
         var rawPayload = "{\"Amount\":100}";
 
         _mockRepository.Setup(r => r.ExistsAsync(key, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act
-        var result = await _sut.IngestAsync(clientId, "TestClient", key, MovementEventType.TransactionCreated, rawPayload);
+        var result = await _sut.IngestAsync(clientContext, key, MovementEventType.TransactionCreated, rawPayload);
 
         // Assert
         Assert.True(result.IsSuccess);

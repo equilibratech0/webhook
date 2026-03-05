@@ -26,8 +26,7 @@ public class TransactionIngestionService : ITransactionIngestionService
     }
 
     public async Task<IngestionResult> IngestAsync(
-        Guid clientId,
-        string clientName,
+        ClientContext clientContext,
         string idempotencyKey,
         MovementEventType eventType,
         string rawPayload,
@@ -50,7 +49,7 @@ public class TransactionIngestionService : ITransactionIngestionService
             }
 
             // 2. Create Domain Model and Save to DB
-            var model = new TransactionIngestionModel(clientId, clientName, idempotencyKey, eventType);
+            var model = new TransactionIngestionModel(clientContext, idempotencyKey, eventType);
             await _repository.SaveAsync(model, cancellationToken);
 
             // 3. Create and Publish Event (Service Bus via Infrastructure)
@@ -58,6 +57,7 @@ public class TransactionIngestionService : ITransactionIngestionService
                 model.Id,
                 model.ClientId,
                 model.ClientName,
+                model.UserIds,
                 model.IdempotencyKey,
                 model.EventType,
                 rawPayload);

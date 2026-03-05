@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using AccountBalance.Webhook.API.DTOs;
 using AccountBalance.Webhook.API.Filters;
 using AccountBalance.Webhook.Application.Interfaces;
+using Shared.Domain.Entities;
 
 namespace AccountBalance.Webhook.API.Controllers;
 
@@ -36,20 +37,18 @@ public class TransactionsController : ControllerBase
             return BadRequest(new TransactionResponseDto { Success = false, Message = "Idempotency-Key header is required." });
         }
 
-        if (!HttpContext.Items.TryGetValue("ClientId", out var clientIdObj) || clientIdObj is not Guid clientId)
+        if (!HttpContext.Items.TryGetValue("ClientContext", out var ctxObj) || ctxObj is not ClientContext clientContext)
         {
-            _logger.LogError("ClientId not found in HttpContext. Items: {@Items}", HttpContext.Items.Keys);
+            _logger.LogError("ClientContext not found in HttpContext.");
             return StatusCode(500, new TransactionResponseDto { Success = false, Message = "Internal server error: Client context is missing." });
         }
-
-        var clientName = HttpContext.Items["ClientName"] as string ?? string.Empty;
 
         string rawPayload = JsonSerializer.Serialize(request.Movement, new JsonSerializerOptions { WriteIndented = false });
 
         _logger.LogInformation("Received webhook request for ClientId: {ClientId}, ClientName: {ClientName}, EventType: {EventType}, IdempotencyKey: {IdempotencyKey}",
-            clientId, clientName, request.EventType, idempotencyKey);
+            clientContext.ClientId, clientContext.ClientName, request.EventType, idempotencyKey);
 
-        var result = await _ingestionService.IngestAsync(clientId, clientName, idempotencyKey, request.EventType, rawPayload, cancellationToken);
+        var result = await _ingestionService.IngestAsync(clientContext, idempotencyKey, request.EventType, rawPayload, cancellationToken);
 
         if (result.IsSuccess)
         {

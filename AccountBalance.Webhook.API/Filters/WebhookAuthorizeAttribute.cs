@@ -1,8 +1,10 @@
 using System;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Shared.Domain.Entities;
 
 namespace AccountBalance.Webhook.API.Filters;
 
@@ -22,37 +24,38 @@ public class WebhookAuthorizeAttribute : Attribute, IAuthorizationFilter
         var configuration = context.HttpContext.RequestServices.GetRequiredService<IConfiguration>();
         var clientsSection = configuration.GetSection("WebhookAuth:Clients");
 
-        bool isValid = false;
-
-        string? clientIdStr = null;
-        string? clientName = null;
+        IConfigurationSection? matchedClient = null;
 
         foreach (var client in clientsSection.GetChildren())
         {
             var apiKey = client.GetSection("ApiKey").Value;
             if (apiKey == extractedApiKey)
             {
-                isValid = true;
-                clientIdStr = client.GetSection("ClientId").Value;
-                clientName = client.GetSection("ClientName").Value;
+                matchedClient = client;
                 break;
             }
         }
 
-        if (!isValid)
+        if (matchedClient is null)
         {
             context.Result = new UnauthorizedObjectResult(new { Message = "Invalid client key." });
             return;
         }
 
-        if (Guid.TryParse(clientIdStr, out var clientId))
-        {
-            context.HttpContext.Items["ClientId"] = clientId;
-            context.HttpContext.Items["ClientName"] = clientName ?? string.Empty;
-        }
-        else
+        var clientIdStr = matchedClient.GetSection("ClientId").Value;
+
+        if (!Guid.TryParse(clientIdStr, out var clientId))
         {
             context.Result = new UnauthorizedObjectResult(new { Message = "Client ID configuration is missing or invalid." });
+            return;
         }
+
+        var clientName = matchedClient.GetSection("ClientName").Value ?? string.Empty;
+        var userIds = matchedClient.GetSection("UserIds").GetChildren()
+            .Select(x => x.Value!)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToList();
+
+        context.HttpContext.Items["ClientContext"] = new ClientContext(clientId, clientName, userIds);
     }
 }
