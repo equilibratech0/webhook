@@ -42,12 +42,14 @@ public class TransactionsController : ControllerBase
             return StatusCode(500, new TransactionResponseDto { Success = false, Message = "Internal server error: Client context is missing." });
         }
 
+        var clientName = HttpContext.Items["ClientName"] as string ?? string.Empty;
+
         string rawPayload = JsonSerializer.Serialize(request.Movement, new JsonSerializerOptions { WriteIndented = false });
 
-        _logger.LogInformation("Received webhook request for ClientId: {ClientId}, EventType: {EventType}, IdempotencyKey: {IdempotencyKey}",
-            clientId, request.EventType, idempotencyKey);
+        _logger.LogInformation("Received webhook request for ClientId: {ClientId}, ClientName: {ClientName}, EventType: {EventType}, IdempotencyKey: {IdempotencyKey}",
+            clientId, clientName, request.EventType, idempotencyKey);
 
-        var result = await _ingestionService.IngestAsync(clientId, idempotencyKey, request.EventType, rawPayload, cancellationToken);
+        var result = await _ingestionService.IngestAsync(clientId, clientName, idempotencyKey, request.EventType, rawPayload, cancellationToken);
 
         if (result.IsSuccess)
         {

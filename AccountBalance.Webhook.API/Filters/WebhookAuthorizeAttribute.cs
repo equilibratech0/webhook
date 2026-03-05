@@ -25,6 +25,7 @@ public class WebhookAuthorizeAttribute : Attribute, IAuthorizationFilter
         bool isValid = false;
 
         string? clientIdStr = null;
+        string? clientName = null;
 
         foreach (var client in clientsSection.GetChildren())
         {
@@ -33,6 +34,7 @@ public class WebhookAuthorizeAttribute : Attribute, IAuthorizationFilter
             {
                 isValid = true;
                 clientIdStr = client.GetSection("ClientId").Value;
+                clientName = client.GetSection("ClientName").Value;
                 break;
             }
         }
@@ -46,6 +48,7 @@ public class WebhookAuthorizeAttribute : Attribute, IAuthorizationFilter
         if (Guid.TryParse(clientIdStr, out var clientId))
         {
             context.HttpContext.Items["ClientId"] = clientId;
+            context.HttpContext.Items["ClientName"] = clientName ?? string.Empty;
         }
         else
         {

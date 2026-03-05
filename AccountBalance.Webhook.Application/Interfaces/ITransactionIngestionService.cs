@@ -6,7 +6,7 @@ namespace AccountBalance.Webhook.Application.Interfaces;
 
 public interface ITransactionIngestionService
 {
-    Task<IngestionResult> IngestAsync(Guid clientId, string idempotencyKey, MovementEventType eventType, string rawPayload, CancellationToken cancellationToken = default);
+    Task<IngestionResult> IngestAsync(Guid clientId, string clientName, string idempotencyKey, MovementEventType eventType, string rawPayload, CancellationToken cancellationToken = default);
 }
 
 public class IngestionResult

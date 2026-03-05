@@ -37,7 +37,7 @@ public class TransactionIngestionServiceTests
     public async Task IngestAsync_WhenIdempotencyKeyIsEmpty_ReturnsFailure()
     {
         // Act
-        var result = await _sut.IngestAsync(Guid.NewGuid(), string.Empty, MovementEventType.TransactionCreated, "{}");
+        var result = await _sut.IngestAsync(Guid.NewGuid(), "TestClient", string.Empty, MovementEventType.TransactionCreated, "{}");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -54,7 +54,7 @@ public class TransactionIngestionServiceTests
             .ReturnsAsync(true);
 
         // Act
-        var result = await _sut.IngestAsync(Guid.NewGuid(), key, MovementEventType.TransactionCreated, "{}");
+        var result = await _sut.IngestAsync(Guid.NewGuid(), "TestClient", key, MovementEventType.TransactionCreated, "{}");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -74,7 +74,7 @@ public class TransactionIngestionServiceTests
             .ReturnsAsync(false);
 
         // Act
-        var result = await _sut.IngestAsync(clientId, key, MovementEventType.TransactionCreated, rawPayload);
+        var result = await _sut.IngestAsync(clientId, "TestClient", key, MovementEventType.TransactionCreated, rawPayload);
 
         // Assert
         Assert.True(result.IsSuccess);
