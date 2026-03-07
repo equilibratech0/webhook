@@ -10,7 +10,7 @@ public class MovementPayloadDto
     [Required]
     public string TransactionId { get; set; } = null!;
 
-    public string? AccountId { get; set; }
+    public AccountDto? Account { get; set; }
 
     public string? Country { get; set; }
 
