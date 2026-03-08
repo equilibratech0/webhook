@@ -13,6 +13,5 @@ public interface IIngestionRepository
 
 public interface ITransactionPublisher
 {
-    // Publish events (e.g., TransactionReceivedEvent)
     Task PublishAsync(TransactionReceivedEvent @event, CancellationToken cancellationToken = default);
 }

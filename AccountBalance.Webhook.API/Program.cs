@@ -14,11 +14,9 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add API Key from appsettings.json
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Configuration.AddEnvironmentVariables();
 
-// 1. Add presentation layer (Controllers / JSON / Swagger)
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -30,23 +28,20 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Webhook API", Version = "v1" });
 
-    // Add API key authorization config for swagger
-    c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+    c.AddSecurityDefinition("CompanyId", new OpenApiSecurityScheme
     {
-        Name = "X-Client-Key",
+        Name = "X-Company-Id",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
-        Description = "Authorization by X-Client-Key inside request's header",
-        Scheme = "ApiKeyScheme"
+        Description = "Company identifier provided by APIM (transformed from subscription key)"
     });
 
-    // Requirement for idempotency key on every call in swagger
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "ApiKey" },
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "CompanyId" },
                 In = ParameterLocation.Header
             },
             new string[] {}
@@ -54,34 +49,30 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// 2. Add Infrastructure layer configurations
+// Infrastructure
 builder.Services.Configure<MongoDbOptions>(builder.Configuration.GetSection("MongoDb"));
 builder.Services.Configure<AzureServiceBusOptions>(builder.Configuration.GetSection("AzureServiceBus"));
 
-// 2.1 Dependencies from Shared (Persistence and Messaging)
 builder.Services.AddSingleton<IMongoDbContext, MongoDbContext>();
 builder.Services.AddSingleton<IMessagePublisher, AzureServiceBusPublisher>();
 
-// 2.2 Dependencies from AccountBalance.Webhook.Infrastructure
 builder.Services.AddScoped<IIngestionRepository, IngestionRepository>();
 builder.Services.AddScoped<ITransactionPublisher, TransactionPublisher>();
 
-// 3. Add Application layer services
+// Application
 builder.Services.AddScoped<ITransactionIngestionService, TransactionIngestionService>();
 
-// Configure Global Error Handling/Logging (simple built-in handling)
 builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseExceptionHandler(); // Maps to ProblemDetails automatically
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();

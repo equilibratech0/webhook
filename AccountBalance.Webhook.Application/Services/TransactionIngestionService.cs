@@ -26,7 +26,7 @@ public class TransactionIngestionService : ITransactionIngestionService
     }
 
     public async Task<IngestionResult> IngestAsync(
-        ClientContext clientContext,
+        Guid companyId,
         string idempotencyKey,
         MovementEventType eventType,
         string rawPayload,
@@ -40,38 +40,36 @@ public class TransactionIngestionService : ITransactionIngestionService
                 return IngestionResult.Failure("IdempotencyKey is required.");
             }
 
-            // 1. Check Idempotency
-            bool exists = await _repository.ExistsAsync(idempotencyKey, cancellationToken);
+            var compositeKey = $"{companyId}:{idempotencyKey}";
+
+            bool exists = await _repository.ExistsAsync(compositeKey, cancellationToken);
             if (exists)
             {
-                _logger.LogWarning("Duplicate transaction detected for IdempotencyKey: {IdempotencyKey}", idempotencyKey);
+                _logger.LogWarning("Duplicate transaction detected for CompanyId: {CompanyId}, IdempotencyKey: {IdempotencyKey}",
+                    companyId, idempotencyKey);
                 return IngestionResult.Duplicate();
             }
 
-            // 2. Create Domain Model and Save to DB
-            var model = new TransactionIngestionModel(clientContext, idempotencyKey, eventType);
+            var model = new TransactionIngestionModel(compositeKey);
             await _repository.SaveAsync(model, cancellationToken);
 
-            // 3. Create and Publish Event (Service Bus via Infrastructure)
             var domainEvent = new TransactionReceivedEvent(
                 model.Id,
-                model.ClientId,
-                model.ClientName,
-                model.UserIds,
-                model.IdempotencyKey,
-                model.EventType,
+                companyId,
+                eventType,
                 rawPayload);
 
             await _publisher.PublishAsync(domainEvent, cancellationToken);
 
-            _logger.LogInformation("Successfully ingested transaction {TransactionId} with IdempotencyKey: {IdempotencyKey}",
-                model.Id, idempotencyKey);
+            _logger.LogInformation("Successfully ingested transaction {TransactionId} for CompanyId: {CompanyId}, IdempotencyKey: {IdempotencyKey}",
+                model.Id, companyId, idempotencyKey);
 
             return IngestionResult.Success();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while ingesting transaction with IdempotencyKey: {IdempotencyKey}", idempotencyKey);
+            _logger.LogError(ex, "Error occurred while ingesting transaction for CompanyId: {CompanyId}, IdempotencyKey: {IdempotencyKey}",
+                companyId, idempotencyKey);
             return IngestionResult.Failure("An unexpected error occurred during ingestion.");
         }
     }

@@ -21,7 +21,7 @@ public class TransactionPublisher : ITransactionPublisher
 
     public async Task PublishAsync(TransactionReceivedEvent domainEvent, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Publishing TransactionReceivedEvent for IdempotencyKey: {IdempotencyKey}", domainEvent.IdempotencyKey);
+        _logger.LogDebug("Publishing TransactionReceivedEvent for TransactionId: {TransactionId}", domainEvent.TransactionId);
 
         await _messagePublisher.PublishIntegrationEventAsync(domainEvent, cancellationToken);
     }

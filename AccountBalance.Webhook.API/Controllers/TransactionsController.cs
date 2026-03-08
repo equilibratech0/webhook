@@ -4,15 +4,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using AccountBalance.Webhook.API.DTOs;
-using AccountBalance.Webhook.API.Filters;
 using AccountBalance.Webhook.Application.Interfaces;
-using Shared.Domain.Entities;
 
 namespace AccountBalance.Webhook.API.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-[WebhookAuthorize] // Apply custom authorization filter
 public class TransactionsController : ControllerBase
 {
     private readonly ITransactionIngestionService _ingestionService;
@@ -28,6 +25,7 @@ public class TransactionsController : ControllerBase
 
     [HttpPost]
     public async Task<IActionResult> IngestTransaction(
+        [FromHeader(Name = "X-Company-Id")] Guid companyId,
         [FromHeader(Name = "Idempotency-Key")] string idempotencyKey,
         [FromBody] TransactionRequestDto request,
         CancellationToken cancellationToken)
@@ -37,18 +35,12 @@ public class TransactionsController : ControllerBase
             return BadRequest(new TransactionResponseDto { Success = false, Message = "Idempotency-Key header is required." });
         }
 
-        if (!HttpContext.Items.TryGetValue("ClientContext", out var ctxObj) || ctxObj is not ClientContext clientContext)
-        {
-            _logger.LogError("ClientContext not found in HttpContext.");
-            return StatusCode(500, new TransactionResponseDto { Success = false, Message = "Internal server error: Client context is missing." });
-        }
-
         string rawPayload = JsonSerializer.Serialize(request.Movement, new JsonSerializerOptions { WriteIndented = false });
 
-        _logger.LogInformation("Received webhook request for ClientId: {ClientId}, ClientName: {ClientName}, EventType: {EventType}, IdempotencyKey: {IdempotencyKey}",
-            clientContext.ClientId, clientContext.ClientName, request.EventType, idempotencyKey);
+        _logger.LogInformation("Received webhook request for CompanyId: {CompanyId}, EventType: {EventType}, IdempotencyKey: {IdempotencyKey}",
+            companyId, request.EventType, idempotencyKey);
 
-        var result = await _ingestionService.IngestAsync(clientContext, idempotencyKey, request.EventType, rawPayload, cancellationToken);
+        var result = await _ingestionService.IngestAsync(companyId, idempotencyKey, request.EventType, rawPayload, cancellationToken);
 
         if (result.IsSuccess)
         {
@@ -57,11 +49,9 @@ public class TransactionsController : ControllerBase
 
         if (result.IsDuplicate)
         {
-            // Requirement: "If duplicate, returns 200 OK"
             return Ok(new TransactionResponseDto { Success = true, Message = "Transaction already processed." });
         }
 
-        // Catch-all failure
         return UnprocessableEntity(new TransactionResponseDto { Success = false, Message = result.ErrorMessage });
     }
 }

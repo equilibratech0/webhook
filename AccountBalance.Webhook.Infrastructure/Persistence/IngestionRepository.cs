@@ -22,18 +22,16 @@ public class IngestionRepository : IIngestionRepository
 
     public async Task<bool> ExistsAsync(string idempotencyKey, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Checking existence of IdempotencyKey: {IdempotencyKey}", idempotencyKey);
+        _logger.LogDebug("Checking idempotency for key: {IdempotencyKey}", idempotencyKey);
 
         var filter = Builders<TransactionIngestionModel>.Filter.Eq(x => x.IdempotencyKey, idempotencyKey);
-
-        // We only care if it exists or not
         var count = await _collection.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
         return count > 0;
     }
 
     public async Task SaveAsync(TransactionIngestionModel model, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Saving TransactionIngestionModel for IdempotencyKey: {IdempotencyKey}", model.IdempotencyKey);
+        _logger.LogInformation("Saving idempotency record for key: {IdempotencyKey}", model.IdempotencyKey);
         await _collection.InsertOneAsync(model, cancellationToken: cancellationToken);
     }
 }

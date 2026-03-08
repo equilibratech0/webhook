@@ -1,13 +1,12 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Shared.Domain.Entities;
 using Shared.Domain.Enums;
 
 namespace AccountBalance.Webhook.Application.Interfaces;
 
 public interface ITransactionIngestionService
 {
-    Task<IngestionResult> IngestAsync(ClientContext clientContext, string idempotencyKey, MovementEventType eventType, string rawPayload, CancellationToken cancellationToken = default);
+    Task<IngestionResult> IngestAsync(Guid companyId, string idempotencyKey, MovementEventType eventType, string rawPayload, CancellationToken cancellationToken = default);
 }
 
 public class IngestionResult
