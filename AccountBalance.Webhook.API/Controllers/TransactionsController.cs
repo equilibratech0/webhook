@@ -25,11 +25,18 @@ public class TransactionsController : ControllerBase
 
     [HttpPost]
     public async Task<IActionResult> IngestTransaction(
-        [FromHeader(Name = "X-Company-Id")] Guid companyId,
+        [FromHeader(Name = "X-Company-Id")] string companyIdRaw,
         [FromHeader(Name = "Idempotency-Key")] string idempotencyKey,
         [FromBody] TransactionRequestDto request,
         CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Raw X-Company-Id header value: {CompanyIdRaw}", companyIdRaw);
+
+        if (string.IsNullOrWhiteSpace(companyIdRaw) || !Guid.TryParse(companyIdRaw, out var companyId))
+        {
+            return BadRequest(new TransactionResponseDto { Success = false, Message = "X-Company-Id header is missing or not a valid GUID." });
+        }
+
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
             return BadRequest(new TransactionResponseDto { Success = false, Message = "Idempotency-Key header is required." });
