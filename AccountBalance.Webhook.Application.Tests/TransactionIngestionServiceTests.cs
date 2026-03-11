@@ -37,7 +37,7 @@ public class TransactionIngestionServiceTests
     [Fact]
     public async Task IngestAsync_WhenIdempotencyKeyIsEmpty_ReturnsFailure()
     {
-        var result = await _sut.IngestAsync(Guid.NewGuid(), string.Empty, MovementEventType.TransactionCreated, "{}");
+        var result = await _sut.IngestAsync(Guid.NewGuid(), string.Empty, MovementEventType.TransactionApproved, "{}");
 
         Assert.False(result.IsSuccess);
         Assert.False(result.IsDuplicate);
@@ -54,7 +54,7 @@ public class TransactionIngestionServiceTests
         _mockRepository.Setup(r => r.ExistsAsync(compositeKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var result = await _sut.IngestAsync(companyId, key, MovementEventType.TransactionCreated, "{}");
+        var result = await _sut.IngestAsync(companyId, key, MovementEventType.TransactionApproved, "{}");
 
         Assert.True(result.IsSuccess);
         Assert.True(result.IsDuplicate);
@@ -72,7 +72,7 @@ public class TransactionIngestionServiceTests
         _mockRepository.Setup(r => r.ExistsAsync(compositeKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        var result = await _sut.IngestAsync(companyId, key, MovementEventType.TransactionCreated, rawPayload);
+        var result = await _sut.IngestAsync(companyId, key, MovementEventType.TransactionApproved, rawPayload);
 
         Assert.True(result.IsSuccess);
         Assert.False(result.IsDuplicate);
@@ -99,8 +99,8 @@ public class TransactionIngestionServiceTests
         _mockRepository.Setup(r => r.ExistsAsync($"{companyB}:{key}", It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        var resultA = await _sut.IngestAsync(companyA, key, MovementEventType.TransactionCreated, rawPayload);
-        var resultB = await _sut.IngestAsync(companyB, key, MovementEventType.TransactionCreated, rawPayload);
+        var resultA = await _sut.IngestAsync(companyA, key, MovementEventType.TransactionApproved, rawPayload);
+        var resultB = await _sut.IngestAsync(companyB, key, MovementEventType.TransactionApproved, rawPayload);
 
         Assert.True(resultA.IsSuccess);
         Assert.False(resultA.IsDuplicate);
