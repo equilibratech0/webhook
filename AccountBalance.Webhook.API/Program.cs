@@ -17,6 +17,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Configuration.AddEnvironmentVariables();
 
+builder.Logging.AddAzureWebAppDiagnostics();
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
